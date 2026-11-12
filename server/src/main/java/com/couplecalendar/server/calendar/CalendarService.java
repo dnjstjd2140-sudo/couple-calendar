@@ -21,7 +21,7 @@ public class CalendarService {
 
 	@Transactional
 	public CoupleCalendar create() {
-		return calendars.save(new CoupleCalendar(newCode(), "나", "너"));
+		return calendars.save(new CoupleCalendar(newCode(), "원성", "민경"));
 	}
 
 	@Transactional(readOnly = true)
