@@ -1,0 +1,43 @@
+# 운영 배포용. 서버에서 이 폴더(couple-calendar)에서: docker compose -f docker-compose.prod.yml up -d --build
+# telpo 와 같은 서버에 올려도 프로젝트 이름·볼륨·포트가 달라서 서로 영향을 주지 않는다.
+name: couple-calendar
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: couplecal
+      POSTGRES_USER: ${DB_USERNAME:-couplecal}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD 를 .env 에 설정하세요}
+    volumes:
+      - couplecal-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-couplecal} -d couplecal"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/couplecal
+      DB_USERNAME: ${DB_USERNAME:-couplecal}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "8081:80" # telpo 가 80 을 쓰므로 8081
+
+volumes:
+  couplecal-db-data:

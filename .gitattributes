@@ -1,0 +1,4 @@
+# 서버(Linux)에서 빌드하므로 줄바꿈은 LF 로 통일. (CRLF 면 gradlew 가 리눅스에서 실행되지 않음)
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary

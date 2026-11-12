@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: couple-calendar-server
+
+  config:
+    import: optional:file:.env[.properties]
+
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    # 로컬: server 폴더에서 docker compose up -d 로 띄운 Postgres(5433). telpo 의 5432 와 겹치지 않게 분리.
+    url: jdbc:postgresql://localhost:5433/couplecal
+    username: ${DB_USERNAME:couplecal}
+    password: ${DB_PASSWORD:couplecal}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 8081
