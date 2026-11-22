@@ -84,7 +84,7 @@ export default function CalendarPage() {
         : result === 'cancel'
           ? '카톡 연결을 취소했어요.'
           : result === 'noscope'
-            ? '"카카오톡 메시지 전송"에 동의해야 알림을 받을 수 있어요. 다시 연결하면서 체크해 주세요.'
+            ? '"카카오톡 메시지 전송"과 "친구 목록"에 모두 동의해야 해요. 다시 연결하면서 체크해 주세요.'
             : '카톡 연결에 실패했어요. 잠시 후 다시 해 주세요.',
     )
     navigate(`/c/${code}`, { replace: true })

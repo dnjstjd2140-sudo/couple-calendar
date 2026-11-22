@@ -30,6 +30,9 @@ public class KakaoToken {
 	@Column(nullable = false, length = 10)
 	private Owner member;
 
+	/** 카카오 회원번호. 상대가 1:1 채팅방으로 보낼 때 친구 목록에서 이 사람을 찾는 데 쓴다. */
+	private Long kakaoUserId;
+
 	@Column(nullable = false, length = 1000)
 	private String accessToken;
 
@@ -65,6 +68,9 @@ public class KakaoToken {
 		return Instant.now().plusSeconds(60).isAfter(accessExpiresAt);
 	}
 
+	public void setKakaoUserId(Long kakaoUserId) { this.kakaoUserId = kakaoUserId; }
+
+	public Long getKakaoUserId() { return kakaoUserId; }
 	public Long getCalendarId() { return calendarId; }
 	public Owner getMember() { return member; }
 	public String getAccessToken() { return accessToken; }

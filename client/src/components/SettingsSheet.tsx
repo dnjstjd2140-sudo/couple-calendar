@@ -104,7 +104,7 @@ export default function SettingsSheet({ cal, me, onClose, onSave }: Props) {
 
         <div className="field">
           <span>카톡 알림</span>
-          <p className="hint">상대가 일정을 추가·수정·삭제하면 카톡 "나와의 채팅"으로 알려 줘요. "같이" 일정은 둘 다 받아요.</p>
+          <p className="hint">일정을 추가·수정·삭제하면 바꾼 사람의 카톡으로 둘의 1:1 채팅방에 알림이 가요. 둘 다 연결해야 해요.</p>
           {!kakao ? (
             <p className="hint">불러오는 중…</p>
           ) : !kakao.available ? (

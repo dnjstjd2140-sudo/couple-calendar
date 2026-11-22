@@ -2,6 +2,7 @@ package com.couplecalendar.server.kakao;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -48,9 +49,13 @@ public class KakaoClient {
 			@JsonProperty("refresh_token_expires_in") long refreshTokenExpiresIn,
 			String scope) {
 
-		/** 사용자가 "카카오톡 메시지 전송"에 동의했는지 (선택 동의라 빠질 수 있다) */
+		/** "카카오톡 메시지 전송"과 "친구 목록"에 둘 다 동의했는지 (선택 동의라 빠질 수 있다) */
 		public boolean canSendMessage() {
-			return scope != null && java.util.Arrays.asList(scope.split(" ")).contains("talk_message");
+			if (scope == null) {
+				return false;
+			}
+			List<String> scopes = java.util.Arrays.asList(scope.split(" "));
+			return scopes.contains("talk_message") && scopes.contains("friends");
 		}
 	}
 
@@ -67,7 +72,7 @@ public class KakaoClient {
 	}
 
 	public String authorizeUrl(String state) {
-		return AUTH + "/oauth/authorize?response_type=code&scope=talk_message"
+		return AUTH + "/oauth/authorize?response_type=code&scope=talk_message,friends"
 				+ "&client_id=" + enc(restApiKey)
 				+ "&redirect_uri=" + enc(redirectUri())
 				+ "&state=" + enc(state);
@@ -86,17 +91,73 @@ public class KakaoClient {
 		return token(form);
 	}
 
-	/** 카톡 "나와의 채팅"으로 텍스트 메시지를 보낸다. */
+	/** 로그인한 사람의 카카오 회원번호 */
+	public long myUserId(String accessToken) {
+		Me me = http.get().uri(API + "/v2/user/me")
+				.header("Authorization", "Bearer " + accessToken)
+				.retrieve()
+				.body(Me.class);
+		return me.id();
+	}
+
+	record Me(long id) {
+	}
+
+	record Friend(Long id, String uuid, @JsonProperty("allowed_msg") Boolean allowedMsg) {
+	}
+
+	record Friends(List<Friend> elements, @JsonProperty("total_count") int totalCount) {
+	}
+
+	/** 내 카톡 친구 중에서 카카오 회원번호가 userId 인 사람의 uuid (메시지 받는 사람 지정용). 없으면 null. */
+	public String friendUuid(String accessToken, long userId) {
+		for (int offset = 0; offset < 1000; offset += 100) {
+			Friends page = http.get()
+					.uri(API + "/v1/api/talk/friends?limit=100&offset=" + offset)
+					.header("Authorization", "Bearer " + accessToken)
+					.retrieve()
+					.body(Friends.class);
+			if (page == null || page.elements() == null || page.elements().isEmpty()) {
+				return null;
+			}
+			for (Friend f : page.elements()) {
+				if (f.id() != null && f.id() == userId && !Boolean.FALSE.equals(f.allowedMsg())) {
+					return f.uuid();
+				}
+			}
+			if (offset + 100 >= page.totalCount()) {
+				return null;
+			}
+		}
+		return null;
+	}
+
+	/** 카톡 "나와의 채팅"으로 보낸다. */
 	public void sendToMe(String accessToken, String text, String url) {
-		Map<String, Object> link = Map.of("web_url", url, "mobile_web_url", url);
-		Map<String, Object> template = Map.of(
+		post(accessToken, "/v2/api/talk/memo/default/send", template(text, url), null);
+	}
+
+	/** 보내는 사람(accessToken 주인)과 받는 사람(uuid)의 1:1 채팅방으로 보낸다. */
+	public void sendToFriend(String accessToken, String receiverUuid, String text, String url) {
+		post(accessToken, "/v1/api/talk/friends/message/default/send", template(text, url),
+				json.writeValueAsString(List.of(receiverUuid)));
+	}
+
+	private Map<String, Object> template(String text, String url) {
+		return Map.of(
 				"object_type", "text",
 				"text", text,
-				"link", link,
+				"link", Map.of("web_url", url, "mobile_web_url", url),
 				"button_title", "달력 열기");
+	}
+
+	private void post(String accessToken, String path, Map<String, Object> template, String receiverUuids) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("template_object", json.writeValueAsString(template));
-		http.post().uri(API + "/v2/api/talk/memo/default/send")
+		if (receiverUuids != null) {
+			form.add("receiver_uuids", receiverUuids);
+		}
+		http.post().uri(API + path)
 				.header("Authorization", "Bearer " + accessToken)
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.body(form)

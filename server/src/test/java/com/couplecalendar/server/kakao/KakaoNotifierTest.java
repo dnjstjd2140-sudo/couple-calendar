@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.EnumSet;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,21 +13,17 @@ import com.couplecalendar.server.event.Owner;
 class KakaoNotifierTest {
 
 	@Test
-	void 한사람_일정은_바꾼_사람의_상대만_받는다() {
-		assertEquals(EnumSet.of(Owner.B), KakaoNotifier.recipients(Owner.A, Owner.A));
-		assertEquals(EnumSet.of(Owner.B), KakaoNotifier.recipients(Owner.B, Owner.A)); // 원성이 민경 일정을 바꿔도 민경만
-		assertEquals(EnumSet.of(Owner.A), KakaoNotifier.recipients(Owner.B, Owner.B));
+	void 바꾼_사람이_상대에게_보낸다() {
+		assertEquals(Owner.A, KakaoNotifier.sender(Owner.A, true));
+		assertEquals(Owner.B, KakaoNotifier.sender(Owner.B, true));
+		assertEquals(Owner.B, KakaoNotifier.other(Owner.A));
+		assertEquals(Owner.A, KakaoNotifier.other(Owner.B));
 	}
 
 	@Test
-	void 같이_일정은_둘_다_받는다() {
-		assertEquals(EnumSet.of(Owner.A, Owner.B), KakaoNotifier.recipients(Owner.BOTH, Owner.A));
-		assertEquals(EnumSet.of(Owner.A, Owner.B), KakaoNotifier.recipients(Owner.BOTH, Owner.B));
-	}
-
-	@Test
-	void 누가_바꿨는지_모르면_둘_다_받는다() {
-		assertEquals(EnumSet.of(Owner.A, Owner.B), KakaoNotifier.recipients(Owner.A, null));
+	void 누가_바꿨는지_모르면_연결된_사람이_보낸다() {
+		assertEquals(Owner.A, KakaoNotifier.sender(null, true));
+		assertEquals(Owner.B, KakaoNotifier.sender(null, false));
 	}
 
 	@Test
