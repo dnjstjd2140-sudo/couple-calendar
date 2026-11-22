@@ -45,7 +45,13 @@ public class KakaoClient {
 			@JsonProperty("access_token") String accessToken,
 			@JsonProperty("expires_in") long expiresIn,
 			@JsonProperty("refresh_token") String refreshToken,
-			@JsonProperty("refresh_token_expires_in") long refreshTokenExpiresIn) {
+			@JsonProperty("refresh_token_expires_in") long refreshTokenExpiresIn,
+			String scope) {
+
+		/** 사용자가 "카카오톡 메시지 전송"에 동의했는지 (선택 동의라 빠질 수 있다) */
+		public boolean canSendMessage() {
+			return scope != null && java.util.Arrays.asList(scope.split(" ")).contains("talk_message");
+		}
 	}
 
 	public boolean enabled() {

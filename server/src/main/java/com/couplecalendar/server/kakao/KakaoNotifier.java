@@ -107,6 +107,10 @@ public class KakaoNotifier {
 					kakao.sendToMe(token.getAccessToken(), text, url);
 				}
 			}
+		} catch (HttpClientErrorException.Forbidden noScope) {
+			// "카카오톡 메시지 전송" 동의 철회 등: 연결을 풀어서 설정 화면에 "연결 안 됨"으로 보이게 한다
+			log.info("카톡 메시지 권한 없음, 연결 해제 (calendar={}, member={})", token.getCalendarId(), token.getMember());
+			tokens.delete(token);
 		} catch (RuntimeException ex) {
 			log.warn("카톡 알림 실패 (calendar={}, member={}): {}",
 					token.getCalendarId(), token.getMember(), ex.getMessage());

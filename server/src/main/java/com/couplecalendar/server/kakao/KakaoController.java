@@ -82,6 +82,10 @@ public class KakaoController {
 			requirePerson(member);
 			CoupleCalendar calendar = calendars.get(calendarCode);
 			KakaoClient.TokenResponse t = kakao.exchangeCode(code);
+			if (!t.canSendMessage()) {
+				// 로그인은 했지만 "카카오톡 메시지 전송"을 체크하지 않음 → 저장해도 알림을 못 보내므로 연결하지 않는다
+				return redirect(back + "?kakao=noscope");
+			}
 			KakaoToken token = tokens.findByCalendarIdAndMember(calendar.getId(), member)
 					.orElseGet(() -> new KakaoToken(calendar.getId(), member));
 			token.apply(t);
