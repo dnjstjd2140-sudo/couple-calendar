@@ -73,6 +73,21 @@ export default function CalendarPage() {
     }
   }, [loadEvents])
 
+  // 카카오 로그인에서 돌아왔을 때 (?kakao=ok|cancel|fail): 결과를 알려 주고 주소에서 지운다
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const result = params.get('kakao')
+    if (!result) return
+    setToast(
+      result === 'ok'
+        ? '카톡 알림을 연결했어요.'
+        : result === 'cancel'
+          ? '카톡 연결을 취소했어요.'
+          : '카톡 연결에 실패했어요. 잠시 후 다시 해 주세요.',
+    )
+    navigate(`/c/${code}`, { replace: true })
+  }, [code, navigate])
+
   useEffect(() => {
     if (!toast) return
     const t = window.setTimeout(() => setToast(null), 2000)
@@ -102,8 +117,8 @@ export default function CalendarPage() {
 
   async function saveEvent(input: EventInput) {
     if (!form) return
-    if (form.event) await api.updateEvent(code, form.event.id, input)
-    else await api.createEvent(code, input)
+    if (form.event) await api.updateEvent(code, form.event.id, input, me)
+    else await api.createEvent(code, input, me)
     setForm(null)
     setSelectedDay(input.startDate)
     await loadEvents()
@@ -112,7 +127,7 @@ export default function CalendarPage() {
   async function deleteEvent(e: CalEvent) {
     if (!window.confirm(`'${e.title}' 일정을 삭제할까요?`)) return
     try {
-      await api.deleteEvent(code, e.id)
+      await api.deleteEvent(code, e.id, me)
       await loadEvents()
     } catch (err) {
       setToast(err instanceof Error ? err.message : '삭제하지 못했어요.')

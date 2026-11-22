@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +24,9 @@ import com.couplecalendar.server.event.EventDtos.EventResponse;
 @RestController
 @RequestMapping("/api/calendars/{code}/events")
 public class EventController {
+
+	/** 이 요청을 보낸 기기의 사람 (A/B). 설정의 "이 기기에서 나는". */
+	static final String ACTOR = "X-Actor";
 
 	private final EventService service;
 
@@ -39,19 +43,21 @@ public class EventController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public EventResponse create(@PathVariable String code, @Validated @RequestBody EventRequest req) {
-		return EventResponse.from(service.create(code, req));
+	public EventResponse create(@PathVariable String code, @Validated @RequestBody EventRequest req,
+			@RequestHeader(name = ACTOR, required = false) Owner actor) {
+		return EventResponse.from(service.create(code, req, actor));
 	}
 
 	@PutMapping("/{id}")
 	public EventResponse update(@PathVariable String code, @PathVariable Long id,
-			@Validated @RequestBody EventRequest req) {
-		return EventResponse.from(service.update(code, id, req));
+			@Validated @RequestBody EventRequest req, @RequestHeader(name = ACTOR, required = false) Owner actor) {
+		return EventResponse.from(service.update(code, id, req, actor));
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void delete(@PathVariable String code, @PathVariable Long id) {
-		service.delete(code, id);
+	public void delete(@PathVariable String code, @PathVariable Long id,
+			@RequestHeader(name = ACTOR, required = false) Owner actor) {
+		service.delete(code, id, actor);
 	}
 }

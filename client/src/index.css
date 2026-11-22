@@ -613,3 +613,36 @@ textarea {
     gap: 14px;
   }
 }
+
+/* 설정 > 카톡 알림 */
+.kakao-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kakao-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+}
+.kakao-list .swatch-label {
+  flex: 1;
+  min-width: 0;
+}
+.kakao-state {
+  font-size: 13px;
+  color: var(--muted);
+}
+.kakao-state.on {
+  color: #1f9d55;
+  font-weight: 600;
+}
+.btn.kakao {
+  background: #fee500;
+  color: #191919;
+  border-color: #fee500;
+}

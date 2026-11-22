@@ -22,3 +22,14 @@ spring:
 
 server:
   port: 8081
+
+app:
+  # 사람이 브라우저로 여는 주소. 카톡 알림 링크와 카카오 로그인 돌아올 주소(/api/kakao/callback)에 쓴다.
+  # 로컬: Vite 화면 주소, 운영: http://64.176.229.225:8081
+  base-url: ${APP_BASE_URL:http://localhost:5174}
+
+kakao:
+  # 카카오 디벨로퍼스 > 앱 > 앱 키 > REST API 키. 비어 있으면 카톡 알림 기능이 꺼진다.
+  rest-api-key: ${KAKAO_REST_API_KEY:}
+  # 보안 > Client Secret 을 "사용함"으로 켠 경우에만
+  client-secret: ${KAKAO_CLIENT_SECRET:}

@@ -1,4 +1,4 @@
-import type { CalEvent, CalendarInfo, EventInput } from './types'
+import type { CalEvent, CalendarInfo, EventInput, KakaoStatus, Person } from './types'
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
@@ -40,10 +40,29 @@ export const api = {
 
   listEvents: (code: string, from: string, to: string) =>
     request<CalEvent[]>(`/calendars/${code}/events?from=${from}&to=${to}`),
-  createEvent: (code: string, input: EventInput) =>
-    request<CalEvent>(`/calendars/${code}/events`, { method: 'POST', body: JSON.stringify(input) }),
-  updateEvent: (code: string, id: number, input: EventInput) =>
-    request<CalEvent>(`/calendars/${code}/events/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
-  deleteEvent: (code: string, id: number) =>
-    request<void>(`/calendars/${code}/events/${id}`, { method: 'DELETE' }),
+  // actor: 이 기기의 사람 (설정 "이 기기에서 나는"). 서버가 카톡 알림 받을 상대를 정하는 데 쓴다.
+  createEvent: (code: string, input: EventInput, actor: Person | null) =>
+    request<CalEvent>(`/calendars/${code}/events`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+      headers: actorHeader(actor),
+    }),
+  updateEvent: (code: string, id: number, input: EventInput, actor: Person | null) =>
+    request<CalEvent>(`/calendars/${code}/events/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+      headers: actorHeader(actor),
+    }),
+  deleteEvent: (code: string, id: number, actor: Person | null) =>
+    request<void>(`/calendars/${code}/events/${id}`, { method: 'DELETE', headers: actorHeader(actor) }),
+
+  kakaoStatus: (code: string) => request<KakaoStatus>(`/calendars/${code}/kakao`),
+  /** 카카오 로그인 페이지로 이동하는 주소 (페이지 이동으로 연다) */
+  kakaoConnectUrl: (code: string, member: Person) => `${BASE}/calendars/${code}/kakao/connect?member=${member}`,
+  kakaoDisconnect: (code: string, member: Person) =>
+    request<void>(`/calendars/${code}/kakao/${member}`, { method: 'DELETE' }),
+}
+
+function actorHeader(actor: Person | null): Record<string, string> {
+  return actor ? { 'X-Actor': actor } : {}
 }

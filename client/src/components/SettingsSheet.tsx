@@ -1,7 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 
 import Modal from './Modal'
-import type { CalendarInfo } from '../types'
+import { api } from '../api'
+import { prefs } from '../lib'
+import type { CalendarInfo, KakaoStatus, Person } from '../types'
 
 interface Props {
   cal: CalendarInfo
@@ -16,6 +18,27 @@ export default function SettingsSheet({ cal, me, onClose, onSave }: Props) {
   const [mine, setMine] = useState(me)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [kakao, setKakao] = useState<KakaoStatus | null>(null)
+
+  useEffect(() => {
+    api.kakaoStatus(cal.code).then(setKakao, () => setKakao({ available: false, a: false, b: false }))
+  }, [cal.code])
+
+  function connect(v: Person) {
+    prefs.setMe(cal.code, v) // 카카오 로그인 갔다 와도 "나는 누구"가 유지되게
+    window.location.href = api.kakaoConnectUrl(cal.code, v)
+  }
+
+  async function disconnect(v: Person) {
+    const name = v === 'A' ? a : b
+    if (!window.confirm(`${name}의 카톡 알림 연결을 끊을까요?`)) return
+    try {
+      await api.kakaoDisconnect(cal.code, v)
+      setKakao(await api.kakaoStatus(cal.code))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '연결을 끊지 못했어요.')
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -77,6 +100,41 @@ export default function SettingsSheet({ cal, me, onClose, onSave }: Props) {
             ))}
           </div>
           <p className="hint">새 일정을 만들 때 기본으로 내 이름이 선택돼요.</p>
+        </div>
+
+        <div className="field">
+          <span>카톡 알림</span>
+          <p className="hint">상대가 일정을 추가·수정·삭제하면 카톡 "나와의 채팅"으로 알려 줘요. "같이" 일정은 둘 다 받아요.</p>
+          {!kakao ? (
+            <p className="hint">불러오는 중…</p>
+          ) : !kakao.available ? (
+            <p className="hint">서버에 카카오 키가 설정되지 않아서 지금은 쓸 수 없어요.</p>
+          ) : (
+            <ul className="kakao-list">
+              {(['A', 'B'] as const).map((v) => {
+                const connected = v === 'A' ? kakao.a : kakao.b
+                return (
+                  <li key={v}>
+                    <span className="swatch-label">
+                      <i style={{ background: `var(--owner-${v.toLowerCase()})` }} />
+                      {v === 'A' ? a || '첫 번째' : b || '두 번째'}
+                    </span>
+                    <span className={`kakao-state ${connected ? 'on' : ''}`}>{connected ? '연결됨' : '연결 안 됨'}</span>
+                    {connected ? (
+                      <button type="button" className="btn ghost sm" onClick={() => disconnect(v)}>
+                        끊기
+                      </button>
+                    ) : mine === v ? (
+                      <button type="button" className="btn kakao sm" onClick={() => connect(v)}>
+                        카톡 연결
+                      </button>
+                    ) : null}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          {kakao?.available && !mine && <p className="hint">먼저 위에서 "이 기기에서 나는"을 골라 주세요.</p>}
         </div>
 
         {error && <p className="form-error">{error}</p>}

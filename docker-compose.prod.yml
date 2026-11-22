@@ -28,6 +28,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/couplecal
       DB_USERNAME: ${DB_USERNAME:-couplecal}
       DB_PASSWORD: ${DB_PASSWORD}
+      APP_BASE_URL: ${APP_BASE_URL:-http://64.176.229.225:8081}
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
 
   web:
     build:
