@@ -57,10 +57,11 @@ public class KakaoToken {
 	public void apply(KakaoClient.TokenResponse t) {
 		Instant now = Instant.now();
 		this.accessToken = t.accessToken();
-		this.accessExpiresAt = now.plusSeconds(t.expiresIn());
+		this.accessExpiresAt = now.plusSeconds(t.expiresIn() == null ? 6 * 3600 : t.expiresIn());
 		if (t.refreshToken() != null) {
 			this.refreshToken = t.refreshToken();
-			this.refreshExpiresAt = now.plusSeconds(t.refreshTokenExpiresIn());
+			this.refreshExpiresAt = now.plusSeconds(
+					t.refreshTokenExpiresIn() == null ? 60L * 24 * 3600 : t.refreshTokenExpiresIn());
 		}
 	}
 

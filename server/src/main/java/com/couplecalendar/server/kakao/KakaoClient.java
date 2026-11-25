@@ -44,9 +44,10 @@ public class KakaoClient {
 
 	public record TokenResponse(
 			@JsonProperty("access_token") String accessToken,
-			@JsonProperty("expires_in") long expiresIn,
+			@JsonProperty("expires_in") Long expiresIn,
+			// 토큰 갱신 응답에는 refresh_token(_expires_in) 이 없을 수 있다 → 기본형(long)이면 읽다가 실패하므로 Long
 			@JsonProperty("refresh_token") String refreshToken,
-			@JsonProperty("refresh_token_expires_in") long refreshTokenExpiresIn,
+			@JsonProperty("refresh_token_expires_in") Long refreshTokenExpiresIn,
 			String scope) {
 
 		/** "카카오톡 메시지 전송"과 "친구 목록"에 둘 다 동의했는지 (선택 동의라 빠질 수 있다) */
